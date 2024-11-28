@@ -111,6 +111,45 @@ def predict_and_save(images_path: str, model: StarDist3DCustom, results_folder: 
     print(f"All images from t={smallest_number} to t={largest_number} have been Segmented")
 
 
+def predict_and_save_big(images_path: str, model: StarDist3DCustom, results_folder: str,blocks_details : dict):
+    """
+    Load 2D slices of a 3D image stack obtained at time t and predict instance coordinates using a trained StarDist3DCustom model.
+    Save the predicted coordinates as numpy arrays in a folder.
+
+    Args:
+        images_path (str): The file path of the 3D image stack with 2D slices at each time point.
+        model (StarDist3DCustom): A trained StarDist3DCustom model for instance segmentation of 3D image stacks.
+        results_folder (str): The folder path to save the results.
+    """
+    # Check if the folder exists and create it if necessary
+    _seg_path = Path(results_folder) / "seg"
+    _seg_path.mkdir(parents=True, exist_ok=True)
+
+    # Get the list of image file names
+    largest_number, smallest_number = get_t_range(images_path)
+
+    # Process images and predict instance coordinates
+    with tqdm(total=largest_number - smallest_number + 1, desc="Segmenting images", ncols=50) as pbar:
+        for t in range(smallest_number, largest_number + 1):
+            try:
+                # Load 2D slices at time t
+                x = load_2d_slices_at_time(images_path, t=t)
+            except FileNotFoundError:
+                # Handle missing image files
+                print(f"Warning: Segmentation has been stopped since images at t={t - 1} cannot be loaded!")
+                break
+            labels, details,prob_map = model.predict_instances_big(x,'ZYX',block_size=blocks_details['block_size'],min_overlap=blocks_details['min_overlap'],context = blocks_details['context'])
+            # Save predicted instance coordinates as numpy arrays
+            coords_filepath = str(_seg_path / f"coords{str(t).zfill(6)}.npy")
+            prob_filepath = str(_seg_path / f"prob{str(t).zfill(6)}.npy")
+            np.save(coords_filepath, details["points"][:, [1, 2, 0]])
+            np.save(prob_filepath, prob_map.transpose((1, 2, 0)))
+            if t == smallest_number:
+                save_auto_seg_vol1(labels.transpose((1, 2, 0)), results_folder)
+            pbar.update(1)
+    print(f"All images from t={smallest_number} to t={largest_number} have been Segmented")
+
+
 def get_t_range(images_path: str | dict):
     if isinstance(images_path, str):
         file_extension = os.path.splitext(images_path)[1]
