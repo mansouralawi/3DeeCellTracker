@@ -313,8 +313,8 @@ class StarDist3DCustom(StarDist3D):
             Returns the label image and a dictionary with the details (coordinates, etc.) of the polygons/polyhedra.
 
         """
-        from stardist.stardist.big import _grid_divisible, BlockND, OBJECT_KEYS#, repaint_labels
-        from stardist.stardist.matching import relabel_sequential
+        from stardist.big import _grid_divisible, BlockND, OBJECT_KEYS#, repaint_labels
+        from stardist.matching import relabel_sequential
         from csbdeep.utils import _raise, backend_channels_last, axes_check_and_normalize, axes_dict, load_json, save_json
         from tqdm import tqdm
 
@@ -346,7 +346,7 @@ class StarDist3DCustom(StarDist3D):
         context     = tuple(_grid_divisible(g, v, name='context',     verbose=False) for v,g,a in zip(context,    grid,axes))
 
         # print(f"input: shape {img.shape} with axes {axes}")
-        print(f'effective: block_size={block_size}, min_overlap={min_overlap}, context={context}', flush=True)
+        # print(f'effective: block_size={block_size}, min_overlap={min_overlap}, context={context}', flush=True)
 
         for a,c,o in zip(axes,context,self._axes_tile_overlap(axes)):
             if c < o:
