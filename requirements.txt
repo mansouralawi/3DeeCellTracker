@@ -9,4 +9,3 @@ scipy~=1.8.0
 pillow~=9.1.0
 scikit-image~=0.19.3
 csbdeep~=0.7.3
-stardist~=0.8.3
